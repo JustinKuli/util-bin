@@ -2,7 +2,23 @@
 
 set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
 
-IMG="${1:?An image must be provided}"
+IMG="${1:-help}"
+
+case "${IMG}" in
+    "help" | "--help")
+    echo "Checks whether a given image is built from source that includes a specific commit."
+    echo "Exits with zero status only if the commit was confirmed to be present."
+    echo "Note: uses metadata only included in some images, so may not work in all cases."
+    echo "Requires 'skopeo' to be installed (but doesn't require 'docker')."
+    echo ""
+    echo "Usage:"
+    echo ""
+    echo "    img-check quay.io/example/image:tag abcd1234"
+    exit 0
+    ;;
+
+esac
+
 CHECK_COMMIT="${2:?A commit to check against must be provided}"
 
 IMG_INFO_JSON=$(skopeo inspect "docker://${1}" | jq '{
