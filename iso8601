@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+INPUT="${1:-full}"
+
+case "${INPUT}" in
+
+"help" | "--help")
+    printf "Gives the date/time in various ISO 8601 formats. Examples:\n\n"
+    iso8601 all
+    ;;
+
+"date")
+    date -u +"%Y-%m-%d"
+    ;;
+
+"full")
+    date -u +"%Y-%m-%dT%H:%M:%SZ"
+    ;;
+
+"compact")
+    date -u +"%Y%m%dT%H%M%SZ"
+    ;;
+
+"week")
+    date -u +"%Y-W%V"
+    ;;
+
+"ordinal")
+    date -u +"%Y-%j"
+    ;;
+
+"date-min")
+    date -u +"%Y-%m-%dT%H%MZ"
+    ;;
+
+"compact-min")
+    date -u +"%Y%m%dT%H%MZ"
+    ;;
+
+"ordinal-min")
+    date -u +"%Y-%jT%H%MZ"
+    ;;
+
+"all")
+    printf "date\n\t\t"
+    date -u +"%Y-%m-%d"
+
+    printf "full\n\t\t"
+    date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+    printf "compact\n\t\t"
+    date -u +"%Y%m%dT%H%M%SZ"
+
+    printf "week\n\t\t"
+    date -u +"%Y-W%V"
+
+    printf "ordinal\n\t\t"
+    date -u +"%Y-%j"
+
+    printf "date-min\n\t\t"
+    date -u +"%Y-%m-%dT%H%MZ"
+
+    printf "compact-min\n\t\t"
+    date -u +"%Y%m%dT%H%MZ"
+
+    printf "ordinal-min\n\t\t"
+    date -u +"%Y-%jT%H%MZ"
+
+    ;;
+
+*)
+    iso8601 full
+    ;;
+
+esac

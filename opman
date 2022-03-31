@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+case "${1}" in
+"help")
+    # help is implemented as a default behavior
+    opman --help
+    ;;
+
+"start")
+    docker run -d --name opman_registry --rm -p 50051:50051 "${2}"
+    ;;
+
+"stop")
+    docker kill opman_registry
+    ;;
+
+"pkg")
+    if [[ -z "${2}" ]]; then
+    grpcurl -plaintext localhost:50051 api.Registry/ListPackages | jq '.name'
+    else
+    grpcurl -plaintext -d '{"name":"'"${2}"'"}' localhost:50051 api.Registry/GetPackage | jq
+    fi
+    ;;
+
+"channels")
+    if [[ -z "${2}" ]]; then
+    echo 'Usage: `opman channels <package-name>`'
+    else
+    grpcurl -plaintext -d '{"name":"'"${2}"'"}' localhost:50051 api.Registry/GetPackage | jq '.channels[].name'
+    fi
+    ;;
+
+"bundle-default")
+    if [[ -z "${3}" ]]; then
+    echo 'Usage: `opman bundle-default <package-name> <channel-name>`'
+    else
+    if [[ "${4}" != "full" ]]; then
+        grpcurl -plaintext -d '{"pkgName":"'"${2}"'","channelName":"'"${3}"'"}' localhost:50051 api.Registry/GetBundleForChannel | jq '.object = "[[elided]]" | .csvJson = "[[elided]]"'
+    else
+        grpcurl -plaintext -d '{"pkgName":"'"${2}"'","channelName":"'"${3}"'"}' localhost:50051 api.Registry/GetBundleForChannel | jq
+    fi
+    fi
+    ;;
+
+"bundles")
+    if [[ -z "${2}" ]]; then
+    echo 'Usage: `opman bundles <package-name> [channel-name]`'
+    else
+    if [[ -z "${3}" ]]; then
+        if [[ "${4}" != "full" ]]; then
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.packageName == "'"$2"'") | .object = "[[elided]]" | .csvJson = "[[elided]]"'
+        else
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.packageName == "'"$2"'")'
+        fi
+    else
+        if [[ "${4}" != "full" ]]; then
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.packageName == "'"$2"'") | select(.channelName == "'"$3"'") | .object = "[[elided]]" | .csvJson = "[[elided]]"'
+        else
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.packageName == "'"$2"'") | select(.channelName == "'"$3"'")'
+        fi
+    fi
+    fi
+    ;;
+
+"csv")
+    if [[ -z "${2}" ]]; then
+    echo 'Usage: `opman csv <csv-name>`'
+    else
+    if [[ "${3}" != "full" ]]; then
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.csvName == "'"$2"'") | .object = "[[elided]]" | .csvJson = "[[elided]]"'
+    else
+        grpcurl -plaintext localhost:50051 api.Registry/ListBundles | jq 'select(.csvName == "'"$2"'")'
+    fi
+    fi
+    ;;
+
+*)
+    echo "opman will help you manage your operator bundles!"
+    echo ""
+    echo "commands:"
+    echo "> opman start <catalog-image>"
+    echo "    Starts a local copy of the catalog source to inspect."
+    echo "> opman stop"
+    echo "    Stops the locally running copy of the catalog source."
+    echo "> opman pkg [package-name]"
+    echo "    Returns the names of all the packages in the catalog, or details about the specified package."
+    echo "> opman channels <package-name>"
+    echo "    Returns the names of all the channels for a package"
+    echo "> opman bundle-default <package-name> <channel-name>"
+    echo "    Returns the default bundle for the specified package and channel"
+    echo "> opman bundles <package-name> [channel-name]"
+    echo "    Returns the bundles for the specifies package, optionally filtering by channel."
+    echo "> opman csv <csv-name>"
+    echo "    Returns the bundle for the specified csv"
+    ;;
+
+esac

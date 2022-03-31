@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+IMG="${1:?An image must be provided}"
+CHECK_COMMIT="${2:?A commit to check against must be provided}"
+
+IMG_INFO_JSON=$(skopeo inspect "docker://${1}" | jq '{
+    digest: .Digest,
+    created: .Created,
+    "vcs-ref": .Labels."vcs-ref",
+    "vcs-url": .Labels."vcs-url"
+}')
+
+IMG_DIGEST=$(echo "${IMG_INFO_JSON}" | jq -r '.digest')
+IMG_CREATED=$(echo "${IMG_INFO_JSON}" | jq -r '.created')
+IMG_COMMIT=$(echo "${IMG_INFO_JSON}" | jq -r '."vcs-ref"')
+IMG_REPO=$(echo "${IMG_INFO_JSON}" | jq -r '."vcs-url"')
+
+echo "Image digest ${IMG_DIGEST} was created at ${IMG_CREATED}, from commit ${IMG_COMMIT} in ${IMG_REPO}."
+
+GH_API_BASE_URL=$(echo ${IMG_REPO} | sed 's|github.com|api.github.com/repos|')
+GH_COMPARE_URL="${GH_API_BASE_URL}/compare/${CHECK_COMMIT}...${IMG_COMMIT}"
+
+COMPARE_INFO_JSON=$(curl --silent "${GH_COMPARE_URL}" | jq '{
+    status: .status,
+    ahead_by: .ahead_by,
+    behind_by: .behind_by
+}')
+
+COMPARE_STATUS=$(echo "${COMPARE_INFO_JSON}" | jq -r '.status')
+COMPARE_AHEAD=$(echo "${COMPARE_INFO_JSON}" | jq -r '.ahead_by')
+COMPARE_BEHIND=$(echo "${COMPARE_INFO_JSON}" | jq -r '.behind_by')
+
+GOOD="\342\234\205"    # ✅
+BAD="\342\235\214"     # ❌
+UNKNOWN="\342\235\224" # ❔
+
+EXIT_CODE=0
+
+echo ""
+if [[ "${COMPARE_STATUS}" == "identical" ]]; then
+    printf "The image uses the same commit we are checking for. ${GOOD}\n"
+else
+    printf "GitHub is reporting the status as \"${COMPARE_STATUS}\"...\n"
+    if [[ "${COMPARE_BEHIND}" == "0" ]]; then
+        printf "The image is ${COMPARE_AHEAD} commits ahead, and not behind. ${GOOD}\n"
+    elif [[ "${COMPARE_AHEAD}" == "0" ]]; then
+        printf "The image is not ahead, and is ${COMPARE_BEHIND} commits behind. ${BAD}\n"
+        EXIT_CODE=1
+    else
+        printf "The image is ${COMPARE_AHEAD} commits ahead, but also ${COMPARE_BEHIND} commits behind.\n"
+        printf "It is unclear if it includes the commit we're looking for. ${UNKNOWN}\n"
+        EXIT_CODE=2
+    fi
+fi
+
+echo ""
+echo "For more information, check ${GH_COMPARE_URL}"
+exit ${EXIT_CODE}

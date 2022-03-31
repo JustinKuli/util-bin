@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+case "${1}" in
+    "help" | "--help")
+    echo "Moves the current contents of ~/Notes/scratch to a backup under ~/Old-Notes"
+    exit 0
+    ;;
+
+esac
+
+mv ~/Notes/scratch ~/Old-Notes/old-scratch/save-$(iso8601 date)
+mkdir ~/Notes/scratch

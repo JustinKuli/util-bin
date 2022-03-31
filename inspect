@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+case "${1}" in
+    "help" | "--help")
+    echo "Inspects the given image's layers, printing some of the more useful information."
+    exit 0
+    ;;
+
+esac
+
+if [[ -z $1 ]]; then
+    echo "an image must be provided"
+    exit 1
+fi
+
+skopeo inspect "docker://${1}" | jq '{
+    name: .Name,
+    digest: .Digest,
+    created: .Created,
+    "build-date": .Labels."build-date",
+    "build-commit-ref": .Labels."io.openshift.build.commit.ref",
+    "build-commit-id": .Labels."io.openshift.build.commit.id",
+    "vcs-ref": .Labels."vcs-ref",
+    "vcs-url": .Labels."vcs-url",
+    layers: .Layers
+}'
