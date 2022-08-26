@@ -3,6 +3,7 @@
 
 A random collection of random scripts I've built / accumulated that I keep in `~/bin`.
 No guarantees that these work for anyone else.
+This folder is intended to be added to your `$PATH`.
 
 MIT licensed (where applicable) because not including a license means "no one may reproduce,
 distribute, or create derivative works from your work", see 

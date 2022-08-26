@@ -8,7 +8,7 @@ case "${INPUT}" in
 
 "help" | "--help")
     printf "Gives the date/time in various ISO 8601 formats. Examples:\n\n"
-    iso8601 all
+    ${0} all
     ;;
 
 "date")
@@ -71,7 +71,7 @@ case "${INPUT}" in
     ;;
 
 *)
-    iso8601 full
+    ${0} full
     ;;
 
 esac
