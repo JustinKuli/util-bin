@@ -2,18 +2,13 @@
 
 set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
 
-case "${1}" in
+case "${1:-help}" in
     "help" | "--help")
     echo "Inspects the given image's layers, printing some of the more useful information."
     exit 0
     ;;
 
 esac
-
-if [[ -z $1 ]]; then
-    echo "an image must be provided"
-    exit 1
-fi
 
 skopeo inspect --override-os linux "docker://${1}" | jq '{
     name: .Name,

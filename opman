@@ -2,11 +2,8 @@
 
 set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
 
-case "${1}" in
-"help")
-    # help is implemented as a default behavior
-    opman --help
-    ;;
+case "${1:-help}" in
+# note: help is implemented as a default behavior
 
 "start")
     docker run -d --name opman_registry --rm -p 50051:50051 "${2}"
