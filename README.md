@@ -1,5 +1,5 @@
 # util-bin
-[![License](https://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A random collection of random scripts I've built / accumulated that I keep in `~/bin`.
 No guarantees that these work for anyone else.
