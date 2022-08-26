@@ -21,7 +21,7 @@ esac
 
 CHECK_COMMIT="${2:?A commit to check against must be provided}"
 
-IMG_INFO_JSON=$(skopeo inspect "docker://${1}" | jq '{
+IMG_INFO_JSON=$(skopeo inspect --override-os linux "docker://${1}" | jq '{
     digest: .Digest,
     created: .Created,
     "vcs-ref": .Labels."vcs-ref",
