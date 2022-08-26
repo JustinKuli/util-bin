@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail  # exit on errors and unset vars, and stop on the first error in a "pipeline"
+
+util_env="$(dirname ${0})/util-bin.env"
+source "${util_env}"
+
+case "${1:-help}" in
+    "help" | "--help")
+    echo "Pushes the most recently created local image up to ${QUAY_SCRATCH_DESTINATION:-<< set destination in ${util_env} >>}"
+    echo "If an argument is provided, it will be used as the base of the tag, which defaults to 'scratch'"
+    echo "The tag will also have the date & time appended, like 'scratch-$(iso8601 ordinal-min)'"
+    exit 0
+    ;;
+
+esac
+
+if [[ -z "${QUAY_SCRATCH_DESTINATION}" ]]l then
+    ${0} --help
+    exit 1
+fi
+
+NEWEST_IMAGE="$(docker images --format '{{.Repository}}:{{.Tag}}' | head -1)"
+TAGNAME="${1:-scratch}"
+SCRATCH_IMAGE="${QUAY_SCRATCH_DESTINATION}:${TAGNAME}-$(iso8601 ordinal-min)"
+
+docker tag "${NEWEST_IMAGE}" "${SCRATCH_IMAGE}"
+docker push "${SCRATCH_IMAGE}"
+
+echo "pushed ${NEWEST_IMAGE} as ${SCRATCH_IMAGE}"
