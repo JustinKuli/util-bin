@@ -19,5 +19,7 @@ skopeo inspect --override-os linux "docker://${1}" | jq '{
     "build-commit-id": .Labels."io.openshift.build.commit.id",
     "vcs-ref": .Labels."vcs-ref",
     "vcs-url": .Labels."vcs-url",
+    "upstream-ref": .Labels."upstream-ref",
+    "upstream-url": .Labels."upstream-url",
     layers: .Layers
 }'
